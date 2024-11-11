@@ -20,16 +20,23 @@ class _MyAppState extends State<MyApp> {
   String url = '';
   bool isOpen = false;
   bool isDataFetched = false;
+  bool isLoading = true;
 
-  Future<void> fetchIsOn() async {
+  @override
+  void initState() {
+    super.initState();
+    fetchIsOn();
     Timer(const Duration(seconds: 5), () {
       if (!isDataFetched) {
         setState(() {
           isOpen = false;
+          isLoading = false;
         });
       }
     });
+  }
 
+  Future<void> fetchIsOn() async {
     try {
       final response = await http.get(
         Uri.parse('https://6703907dab8a8f892730a6d2.mockapi.io/api/v1/elementalmatch'),
@@ -38,39 +45,73 @@ class _MyAppState extends State<MyApp> {
       if (response.statusCode == 200) {
         final List<dynamic> data = jsonDecode(response.body);
         if (data.isNotEmpty) {
+          final bool apiIsOpen = data[0]['is_on'] ?? false;
+          final String apiUrl = data[0]['url'] ?? '';
+          if (apiIsOpen && await isValidUrl(apiUrl)) {
+            setState(() {
+              isOpen = true;
+              url = apiUrl;
+              isDataFetched = true;
+              isLoading = false;
+            });
+          } else {
+            setState(() {
+              isOpen = false;
+              isDataFetched = true;
+              isLoading = false;
+            });
+          }
+        } else {
           setState(() {
-            isOpen = data[0]['is_on'] ?? false;
-            url = data[0]['url'] ?? '';
+            isOpen = false;
             isDataFetched = true;
+            isLoading = false;
           });
         }
       } else {
-        print('Failed to load data: ${response.statusCode}');
+        setState(() {
+          isOpen = false;
+          isDataFetched = true;
+          isLoading = false;
+        });
       }
     } catch (e) {
-      print('Error fetching data: $e');
+      setState(() {
+        isOpen = false;
+        isDataFetched = true;
+        isLoading = false;
+      });
     }
   }
 
-  @override
-  void initState() {
-    super.initState();
-    fetchIsOn();
+  Future<bool> isValidUrl(String url) async {
+    try {
+      final response = await http.get(Uri.parse(url)).timeout(const Duration(seconds: 5));
+      if (response.statusCode == 200) {
+        return true;
+      } else {
+        return false;
+      }
+    } on TimeoutException catch (_) {
+      return false;
+    } catch (e) {
+      return false;
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      home: isDataFetched
-          ? (isOpen
-          ? WebViewScreen(backgroundColor: Colors.black, url: url)
-          : const StartGame())
-          : const Scaffold(
+      home: isLoading
+          ? const Scaffold(
         body: Center(
           child: CircularProgressIndicator(),
         ),
-      ),
+      )
+          : isOpen
+          ? WebViewScreen(backgroundColor: Colors.black, url: url)
+          : const StartGame(),
     );
   }
 }
