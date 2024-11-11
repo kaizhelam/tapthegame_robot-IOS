@@ -3,8 +3,7 @@ import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class WebViewScreen extends StatefulWidget {
-  const WebViewScreen(
-      {super.key, required this.backgroundColor, required this.url});
+  const WebViewScreen({super.key, required this.backgroundColor, required this.url});
 
   final Color backgroundColor;
   final String url;
@@ -38,11 +37,8 @@ class _WebViewScreenState extends State<WebViewScreen> {
     double? savedTop = prefs.getDouble('top');
 
     setState(() {
-      // Set the initial `left` to 0
       left = savedLeft ?? 0.0;
-      // Set the initial `top` to center of the screen if no saved position exists
-      top = savedTop ??
-          (MediaQuery.of(context).size.height - bottomBarHeight - 50) / 2;
+      top = savedTop ?? (MediaQuery.of(context).size.height - bottomBarHeight - 50) / 2;
     });
   }
 
@@ -57,8 +53,7 @@ class _WebViewScreenState extends State<WebViewScreen> {
       _selectedIndex = index;
       if (index == 0) {
         if (_latestUrl != null) {
-          _webViewController.loadUrl(
-              urlRequest: URLRequest(url: WebUri(_latestUrl!)));
+          _webViewController.loadUrl(urlRequest: URLRequest(url: WebUri(_latestUrl!)));
         }
       } else if (index == 1) {
         _webViewController.goBack();
@@ -79,11 +74,12 @@ class _WebViewScreenState extends State<WebViewScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: widget.backgroundColor,
+      extendBody: true,
+      backgroundColor: Colors.black,  // Ensures Scaffold background remains black
       body: SafeArea(
         child: LayoutBuilder(
           builder: (context, constraints) {
-            double maxTopPosition = constraints.maxHeight - bottomBarHeight - 60;
+            double maxTopPosition = constraints.maxHeight - bottomBarHeight - 100;
             double maxLeftPosition = constraints.maxWidth - 50;
             if (left < 0) left = 0;
             if (top < 0) top = 0;
@@ -92,35 +88,38 @@ class _WebViewScreenState extends State<WebViewScreen> {
 
             return Stack(
               children: [
-                InAppWebView(
-                  initialUrlRequest: URLRequest(
-                    url: WebUri(widget.url),
-                    headers: {"User-Agent": "Mozilla/5.0"},
+                // Adjust the web view height to fit above the bottom bar
+                Positioned.fill(
+                  bottom: _isBottomBarVisible ? bottomBarHeight : 0,
+                  child: InAppWebView(
+                    initialUrlRequest: URLRequest(
+                      url: WebUri(widget.url),
+                      headers: {"User-Agent": "Mozilla/5.0"},
+                    ),
+                    onLoadStop: (controller, url) {
+                      setState(() {
+                        _isLoading = false;
+                        _latestUrl = url?.toString();
+                      });
+                    },
+                    onLoadStart: (controller, url) {
+                      setState(() {
+                        _isLoading = true;
+                      });
+                    },
+                    onWebViewCreated: (controller) {
+                      _webViewController = controller;
+                    },
+                    onLoadError: (controller, url, code, message) {
+                      print("Error loading page: $message");
+                    },
+                    androidOnPermissionRequest: (controller, origin, resources) async {
+                      return PermissionRequestResponse(
+                        resources: resources,
+                        action: PermissionRequestResponseAction.GRANT,
+                      );
+                    },
                   ),
-                  onLoadStop: (controller, url) {
-                    setState(() {
-                      _isLoading = false;
-                      _latestUrl = url?.toString();
-                    });
-                  },
-                  onLoadStart: (controller, url) {
-                    setState(() {
-                      _isLoading = true;
-                    });
-                  },
-                  onWebViewCreated: (controller) {
-                    _webViewController = controller;
-                  },
-                  onLoadError: (controller, url, code, message) {
-                    print("Error loading page: $message");
-                  },
-                  androidOnPermissionRequest:
-                      (controller, origin, resources) async {
-                    return PermissionRequestResponse(
-                      resources: resources,
-                      action: PermissionRequestResponseAction.GRANT,
-                    );
-                  },
                 ),
                 if (_isLoading)
                   const Center(child: CircularProgressIndicator()),
@@ -165,41 +164,45 @@ class _WebViewScreenState extends State<WebViewScreen> {
                     ),
                   ),
                 ),
-                if (_isBottomBarVisible)
-                  Positioned(
-                    bottom: 0,
-                    left: 0,
-                    right: 0,
-                    child: BottomNavigationBar(
-                      type: BottomNavigationBarType.fixed,
-                      backgroundColor: Colors.black,
-                      items: const <BottomNavigationBarItem>[
-                        BottomNavigationBarItem(
-                          icon: Center(child: Icon(Icons.home, size: 32)),
-                          label: '',
-                        ),
-                        BottomNavigationBarItem(
-                          icon: Center(child: Icon(Icons.arrow_back, size: 32)),
-                          label: '',
-                        ),
-                        BottomNavigationBarItem(
-                          icon: Center(
-                              child: Icon(Icons.arrow_forward, size: 32)),
-                          label: '',
-                        ),
-                        BottomNavigationBarItem(
-                          icon: Center(child: Icon(Icons.refresh, size: 32)),
-                          label: '',
-                        ),
-                      ],
-                      currentIndex: _selectedIndex,
-                      selectedItemColor: Colors.white,
-                      unselectedItemColor: Colors.white,
-                      onTap: _onItemTapped,
-                      showSelectedLabels: false,
-                      showUnselectedLabels: false,
+                AnimatedPositioned(
+                  duration: const Duration(milliseconds: 00), // Add smooth animation duration
+                  bottom: _isBottomBarVisible ? 0 : -bottomBarHeight,  // Hides the bottom bar smoothly
+                  left: 0,
+                  right: 0,
+                  child: SafeArea(
+                    child: Padding(
+                      padding: EdgeInsets.only(bottom: MediaQuery.of(context).padding.bottom),
+                      child: BottomNavigationBar(
+                        type: BottomNavigationBarType.fixed,
+                        backgroundColor: Colors.black,
+                        items: const <BottomNavigationBarItem>[
+                          BottomNavigationBarItem(
+                            icon: Center(child: Icon(Icons.home, size: 24)),
+                            label: '',
+                          ),
+                          BottomNavigationBarItem(
+                            icon: Center(child: Icon(Icons.arrow_back, size: 24)),
+                            label: '',
+                          ),
+                          BottomNavigationBarItem(
+                            icon: Center(child: Icon(Icons.arrow_forward, size: 24)),
+                            label: '',
+                          ),
+                          BottomNavigationBarItem(
+                            icon: Center(child: Icon(Icons.refresh, size: 24)),
+                            label: '',
+                          ),
+                        ],
+                        currentIndex: _selectedIndex,
+                        selectedItemColor: Colors.white,
+                        unselectedItemColor: Colors.white,
+                        onTap: _onItemTapped,
+                        showSelectedLabels: false,
+                        showUnselectedLabels: false,
+                      ),
                     ),
                   ),
+                ),
               ],
             );
           },
