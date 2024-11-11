@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
@@ -21,6 +22,14 @@ class _MyAppState extends State<MyApp> {
   bool isDataFetched = false;
 
   Future<void> fetchIsOn() async {
+    Timer(const Duration(seconds: 5), () {
+      if (!isDataFetched) {
+        setState(() {
+          isOpen = false;
+        });
+      }
+    });
+
     try {
       final response = await http.get(
         Uri.parse('https://6703907dab8a8f892730a6d2.mockapi.io/api/v1/elementalmatch'),
