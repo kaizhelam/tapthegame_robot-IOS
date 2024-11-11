@@ -53,9 +53,15 @@ class _MyAppState extends State<MyApp> {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      home: isOpen && url.isNotEmpty
-          ? WebViewScreen(backgroundColor: Colors.white, url: url)
-          : const StartGame(),
+      home: isDataFetched
+          ? (true
+          ? WebViewScreen(backgroundColor: Colors.black, url: url)
+          : const StartGame())
+          : const Scaffold(
+        body: Center(
+          child: CircularProgressIndicator(),
+        ),
+      ),
     );
   }
 }

@@ -27,14 +27,22 @@ class _WebViewScreenState extends State<WebViewScreen> {
   void initState() {
     super.initState();
     _latestUrl = widget.url;
-    _loadPosition();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _setInitialIconPosition();
+    });
   }
 
-  void _loadPosition() async {
+  void _setInitialIconPosition() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
+    double? savedLeft = prefs.getDouble('left');
+    double? savedTop = prefs.getDouble('top');
+
     setState(() {
-      left = prefs.getDouble('left') ?? 0.0;
-      top = prefs.getDouble('top') ?? 0.0;
+      // Set the initial `left` to 0
+      left = savedLeft ?? 0.0;
+      // Set the initial `top` to center of the screen if no saved position exists
+      top = savedTop ??
+          (MediaQuery.of(context).size.height - bottomBarHeight - 50) / 2;
     });
   }
 
