@@ -63,20 +63,25 @@ class _MobileViewScreenState extends State<MobileViewScreen> {
   void _moveImages() {
     final random = Random();
     final screenSize = MediaQuery.of(context).size;
+    final safePadding = MediaQuery.of(context).padding;
+
+    // Calculate the size available within the SafeArea
+    final safeAreaWidth = screenSize.width;
+    final safeAreaHeight = screenSize.height - safePadding.top - safePadding.bottom;
 
     double imageSize = 130.0; // Size of the images
     double minHeight = 150.0; // Minimum height for the images to avoid the text area
 
-    double xTarget = random.nextDouble() * (screenSize.width - imageSize);
-    double yTarget = minHeight + random.nextDouble() * (screenSize.height - minHeight - imageSize);
+    double xTarget = random.nextDouble() * (safeAreaWidth - imageSize);
+    double yTarget = minHeight + random.nextDouble() * (safeAreaHeight - minHeight - imageSize);
 
-    double xNonTarget = random.nextDouble() * (screenSize.width - imageSize);
-    double yNonTarget = minHeight + random.nextDouble() * (screenSize.height - minHeight - imageSize);
+    double xNonTarget = random.nextDouble() * (safeAreaWidth - imageSize);
+    double yNonTarget = minHeight + random.nextDouble() * (safeAreaHeight - minHeight - imageSize);
 
     // Ensure target and non-target images do not overlap
     while ((xTarget - xNonTarget).abs() < imageSize && (yTarget - yNonTarget).abs() < imageSize) {
-      xNonTarget = random.nextDouble() * (screenSize.width - imageSize);
-      yNonTarget = minHeight + random.nextDouble() * (screenSize.height - minHeight - imageSize);
+      xNonTarget = random.nextDouble() * (safeAreaWidth - imageSize);
+      yNonTarget = minHeight + random.nextDouble() * (safeAreaHeight - minHeight - imageSize);
     }
 
     setState(() {
