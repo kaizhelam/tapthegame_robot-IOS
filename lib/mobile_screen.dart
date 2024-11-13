@@ -64,15 +64,19 @@ class _MobileViewScreenState extends State<MobileViewScreen> {
     final random = Random();
     final screenSize = MediaQuery.of(context).size;
 
-    double xTarget = random.nextDouble() * (screenSize.width - 130);
-    double yTarget = max(130.0, random.nextDouble() * (screenSize.height - 130 - 30));
+    double imageSize = 130.0; // Size of the images
+    double minHeight = 150.0; // Minimum height for the images to avoid the text area
 
-    double xNonTarget = random.nextDouble() * (screenSize.width - 130);
-    double yNonTarget = max(130.0, random.nextDouble() * (screenSize.height - 130 - 30));
+    double xTarget = random.nextDouble() * (screenSize.width - imageSize);
+    double yTarget = minHeight + random.nextDouble() * (screenSize.height - minHeight - imageSize);
 
-    while ((xTarget - xNonTarget).abs() < 130 && (yTarget - yNonTarget).abs() < 130) {
-      xNonTarget = random.nextDouble() * (screenSize.width - 130);
-      yNonTarget = max(130.0, random.nextDouble() * (screenSize.height - 130 - 30));
+    double xNonTarget = random.nextDouble() * (screenSize.width - imageSize);
+    double yNonTarget = minHeight + random.nextDouble() * (screenSize.height - minHeight - imageSize);
+
+    // Ensure target and non-target images do not overlap
+    while ((xTarget - xNonTarget).abs() < imageSize && (yTarget - yNonTarget).abs() < imageSize) {
+      xNonTarget = random.nextDouble() * (screenSize.width - imageSize);
+      yNonTarget = minHeight + random.nextDouble() * (screenSize.height - minHeight - imageSize);
     }
 
     setState(() {
@@ -222,84 +226,85 @@ class _MobileViewScreenState extends State<MobileViewScreen> {
     }
 
     return Scaffold(
-      appBar: AppBar(
-        backgroundColor: Colors.black,
-        automaticallyImplyLeading: false,
-        title: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      body: SafeArea(  // Added SafeArea here
+        child: Stack(
           children: [
-            Row(
-              children: [
-                const Icon(Icons.score, color: Colors.white, size: 30),
-                const SizedBox(width: 8),
-                RichText(
-                  text: TextSpan(
-                    text: "Score : ",
-                    style: GoogleFonts.lilitaOne(
-                      textStyle: const TextStyle(color: Colors.white, fontSize: 30),
-                    ),
-                    children: [
-                      TextSpan(
-                        text: "$score",
-                        style: GoogleFonts.lilitaOne(
-                          textStyle: TextStyle(color: scoreColor, fontSize: 30),
+            Container(
+              decoration: const BoxDecoration(
+                image: DecorationImage(
+                    image: AssetImage("assets/images/bg.png"), fit: BoxFit.cover),
+              ),
+            ),
+            Container(
+              color: Colors.black, // Set the desired background color
+              padding: const EdgeInsets.symmetric(vertical: 10), // Optional padding for vertical spacing
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Row(
+                      children: [
+                        RichText(
+                          text: TextSpan(
+                            text: "Score : ",
+                            style: GoogleFonts.lilitaOne(
+                              textStyle: const TextStyle(color: Colors.white, fontSize: 35),
+                            ),
+                            children: [
+                              TextSpan(
+                                text: "$score",
+                                style: GoogleFonts.lilitaOne(
+                                  textStyle: TextStyle(color: scoreColor, fontSize: 35),
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
+                    Row(
+                      children: [
+                        Text(
+                          "Time : $timeLeft",
+                          style: GoogleFonts.lilitaOne(
+                            textStyle: const TextStyle(color: Colors.white, fontSize: 35),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            if (gameStart && currentTargetImage.isNotEmpty)
+              Positioned(
+                left: targetPosition.dx,
+                top: targetPosition.dy,
+                child: GestureDetector(
+                  onTap: _onTapTarget,
+                  child: Image.asset(
+                    currentTargetImage,
+                    width: 130,
+                    height: 130,
                   ),
                 ),
-              ],
-            ),
-            Row(
-              children: [
-                const Icon(Icons.timer, color: Colors.white, size: 30),
-                const SizedBox(width: 8),
-                Text(
-                  "Time : $timeLeft",
-                  style: GoogleFonts.lilitaOne(
-                    textStyle: const TextStyle(color: Colors.white, fontSize: 30),
+              ),
+            if (gameStart && currentNonTargetImage.isNotEmpty)
+              Positioned(
+                left: nonTargetPosition.dx,
+                top: nonTargetPosition.dy,
+                child: GestureDetector(
+                  onTap: _onTapNonTarget,
+                  child: Image.asset(
+                    currentNonTargetImage,
+                    width: 130,
+                    height: 130,
                   ),
                 ),
-              ],
-            ),
+              ),
           ],
         ),
-      ),
-      body: Stack(
-        children: [
-          Container(
-            decoration: const BoxDecoration(
-              image: DecorationImage(
-                  image: AssetImage("assets/images/bg.png"), fit: BoxFit.cover),
-            ),
-          ),
-          if (gameStart && currentTargetImage.isNotEmpty)
-            Positioned(
-              left: targetPosition.dx,
-              top: targetPosition.dy,
-              child: GestureDetector(
-                onTap: _onTapTarget,
-                child: Image.asset(
-                  currentTargetImage,
-                  width: 130,
-                  height: 130,
-                ),
-              ),
-            ),
-          if (gameStart && currentNonTargetImage.isNotEmpty)
-            Positioned(
-              left: nonTargetPosition.dx,
-              top: nonTargetPosition.dy,
-              child: GestureDetector(
-                onTap: _onTapNonTarget,
-                child: Image.asset(
-                  currentNonTargetImage,
-                  width: 130,
-                  height: 130,
-                ),
-              ),
-            ),
-        ],
       ),
     );
   }
