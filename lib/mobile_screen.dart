@@ -134,7 +134,7 @@ class _MobileViewScreenState extends State<MobileViewScreen> {
                   ),
                   children: [
                     TextSpan(
-                      text: "$score",  // Dynamic score value
+                      text: "$score",
                       style: GoogleFonts.lilitaOne(
                         textStyle: TextStyle(
                           color: score > 0
@@ -230,7 +230,7 @@ class _MobileViewScreenState extends State<MobileViewScreen> {
           children: [
             Row(
               children: [
-                const Icon(Icons.score, color: Colors.white, size: 30), // Score icon
+                const Icon(Icons.score, color: Colors.white, size: 30),
                 const SizedBox(width: 8),
                 RichText(
                   text: TextSpan(
